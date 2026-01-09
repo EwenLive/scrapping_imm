@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  scrapping_imm:
+    build: .
+    container_name: scrapping_imm
+    env_file:
+      - .env
+    volumes:
+      - ./annonces_vues.json:/app/annonces_vues.json
+      - ./user_data:/app/user_data # Important pour garder la session
+    restart: unless-stopped

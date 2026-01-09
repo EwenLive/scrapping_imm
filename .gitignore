@@ -1,0 +1,5 @@
+.env
+user_data/
+annonces_vues.json
+__pycache__/
+*.pyc
