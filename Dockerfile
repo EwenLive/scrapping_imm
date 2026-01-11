@@ -1,30 +1,34 @@
-# --- Stage 1: Builder ---
-FROM python:3.12-slim AS builder
+# On utilise l'image Playwright Noble directement
+FROM mcr.microsoft.com/playwright/python:v1.49.1-noble
+
+# 1. Éviter les questions pendant l'installation
+ENV DEBIAN_FRONTEND=noninteractive
+
 WORKDIR /app
-RUN pip install poetry
+
+# 2. Installation de Xvfb (pour l'écran virtuel)
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+# 3. Installation de Poetry
+RUN pip install --no-cache-dir poetry
+
+# 4. Copie uniquement des fichiers de dépendances
 COPY pyproject.toml poetry.lock* ./
-# On installe les dépendances sans créer d'environnement virtuel
-RUN poetry config virtualenvs.create false && poetry install --no-root --only main
 
-# --- Stage 2: Final ---
-FROM python:3.12-slim
-WORKDIR /app
+# 5. Installation des dépendances Python
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-root --only main
 
-# On installe les outils de base
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# Copie des paquets Python depuis le builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# INSTALLATION CRITIQUE : Playwright + Dépendances système officielles
+# 6. Installation de Chromium (le navigateur)
 RUN playwright install chromium
-RUN playwright install-deps chromium
 
-# Copie du reste du code
+# 7. Copie du reste du code source
 COPY . .
 
-# On s'assure que le fichier JSON existe pour éviter les erreurs de montage
+# 8. Création du fichier JSON s'il n'existe pas
 RUN touch annonces_vues.json
 
-CMD ["python", "main.py"]
+# 9. Lancement avec l'écran virtuel
+CMD ["sh", "-c", "xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' python -u main.py 2>&1"]

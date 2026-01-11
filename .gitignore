@@ -1,5 +1,20 @@
+# Configuration et Secrets
 .env
+
+# Données locales et Sessions 
 user_data/
 annonces_vues.json
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+
+# Docker
+.docker/
+
+# Divers
+.DS_Store
+tempCodeRunnerFile.py
